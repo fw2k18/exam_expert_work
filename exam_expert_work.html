@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>✧ Исследовательская работа на соискание звания Эксперта школы Восстановления  ✧</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* РАСТЯГИВАЕМ НА ВЕСЬ ЭКРАН */
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;   /* убираем прокрутку самого body, скроллится только свиток */
+        }
+
+        body {
+            background: #1e1912;  /* глубокий тёмный фон, имитация старой комнаты */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Georgia', 'Times New Roman', 'Garamond', 'Segoe UI', serif;
+            padding: 0;
+            margin: 0;
+            /* легкий курсор в стиле пера (опционально) */
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="26" viewBox="0 0 22 26"><polygon points="2,2 20,12 11,15 2,23" fill="%233d2b1a" stroke="%23b87a3a" stroke-width="1"/></svg>') 4 6, auto;
+        }
+
+        /* контейнер свитка — полная высота/ширина с отступами для красоты */
+        .scroll-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 12px 5vw;
+        }
+
+        .scroll-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;      /* красивая ширина даже на больших мониторах */
+            height: 100%;
+            max-height: 95vh;
+            display: flex;
+            flex-direction: column;
+            filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.5));
+        }
+
+        /* ВЕРХНИЙ И НИЖНИЙ ВАЛЫ (деревянные катушки) — адаптив */
+        .scroll-roller {
+            position: relative;
+            height: 32px;
+            background: repeating-linear-gradient(90deg, 
+                #8b5a2b 0px, #8b5a2b 12px,
+                #c28a3e 12px, #c28a3e 18px,
+                #a56b2f 18px, #a56b2f 30px,
+                #c28a3e 30px, #c28a3e 36px,
+                #8b5a2b 36px, #8b5a2b 48px);
+            border-radius: 40px;
+            border: 1px solid #4a3018;
+            box-shadow: inset 0 1px 6px rgba(255,245,200,0.4), 0 4px 10px rgba(0,0,0,0.3);
+            margin: 0 20px;
+            flex-shrink: 0;
+        }
+
+        .scroll-roller::before,
+        .scroll-roller::after {
+            content: "";
+            position: absolute;
+            top: -8px;
+            width: 18px;
+            height: 48px;
+            background: radial-gradient(ellipse at center, #c58942 20%, #5c3518 85%);
+            border-radius: 35%;
+            box-shadow: 0 2px 8px black;
+        }
+        .scroll-roller::before {
+            left: -14px;
+            transform: rotate(-8deg);
+        }
+        .scroll-roller::after {
+            right: -14px;
+            transform: rotate(8deg);
+        }
+
+        /* ГЛАВНЫЙ ПЕРГАМЕНТ — РАСТЯГИВАЕТСЯ ПО ВЫСОТЕ */
+        .parchment {
+            flex: 1;
+            background: #fef3df;
+            background-image: radial-gradient(circle at 15% 30%, rgba(170,130,70,0.08) 2.2%, transparent 2.8%),
+                              radial-gradient(circle at 85% 70%, rgba(150,105,55,0.07) 2%, transparent 2.5%);
+            background-size: 42px 42px, 36px 36px;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4), inset 0 0 45px rgba(160, 115, 55, 0.25);
+            border-left: 16px solid #e9debc;
+            border-right: 16px solid #e9debc;
+            position: relative;
+            transition: box-shadow 0.1s ease, transform 0.05s linear;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;   /* важно для flex-ребенка с overflow */
+        }
+
+        /* бока с потёртостями */
+        .parchment::before {
+            content: "";
+            position: absolute;
+            top: 5%;
+            left: -12px;
+            width: 24px;
+            height: 130px;
+            background: radial-gradient(ellipse, rgba(80,50,22,0.25) 0%, transparent 70%);
+            filter: blur(4px);
+            pointer-events: none;
+            z-index: 2;
+        }
+        .parchment::after {
+            content: "";
+            position: absolute;
+            bottom: 10%;
+            right: -14px;
+            width: 28px;
+            height: 170px;
+            background: radial-gradient(ellipse, rgba(75,48,20,0.28) 0%, transparent 75%);
+            filter: blur(5px);
+            pointer-events: none;
+        }
+
+        /* ОБЛАСТЬ ТЕКСТА С ПРОКРУТКОЙ (скроллится только внутри) */
+        .scroll-text {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.8rem 2rem 2.2rem 2rem;
+            color: #2d1e0e;
+            font-size: clamp(0.95rem, 4vw, 1.35rem);
+            line-height: 1.6;
+            text-align: justify;
+            text-shadow: 0 1px 1px rgba(255,245,210,0.7);
+            scroll-behavior: smooth;
+            transition: box-shadow 0.1s, background 0.05s linear;
+            font-weight: 500;
+        }
+
+        /* кастомный скролл в старинном стиле (работает на desktop и мобильных webkit) */
+        .scroll-text::-webkit-scrollbar {
+            width: 8px;
+            background: #e5d2aa;
+            border-radius: 20px;
+        }
+        .scroll-text::-webkit-scrollbar-track {
+            background: #ecd9ae;
+            border-radius: 20px;
+            box-shadow: inset 0 0 4px #836e42;
+        }
+        .scroll-text::-webkit-scrollbar-thumb {
+            background: #9b6f3c;
+            border-radius: 20px;
+            background-image: linear-gradient(135deg, #be813f, #79521f);
+            border: 1px solid #f2e2b5;
+        }
+
+        /* Буквица */
+        .drop-cap {
+            font-size: clamp(2.6rem, 8vw, 4.2rem);
+            font-family: 'Times New Roman', 'Georgia', serif;
+            float: left;
+            margin: 0.2rem 0.8rem 0rem 0rem;
+            line-height: 0.85;
+            color: #8b441e;
+            text-shadow: 2px 2px 3px rgba(0,0,0,0.1);
+            font-weight: bold;
+            border-right: 2px solid #ccaa75;
+            padding-right: 12px;
+        }
+
+        /* разделители и старинные вставки */
+        hr {
+            margin: 1.5rem 0;
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #bf9864, #e9cf9a, #bf9864, transparent);
+        }
+
+        h3 {
+            font-family: inherit;
+            color: #724a26;
+            letter-spacing: 1px;
+            font-weight: normal;
+            font-size: 1.3rem;
+            margin: 1rem 0;
+        }
+
+        ul {
+            margin: 0.8rem 0 1rem 1.5rem;
+            list-style-type: '🜟  ';
+        }
+
+        li {
+            margin: 0.5rem 0;
+        }
+
+        .signature {
+            text-align: right;
+            font-style: italic;
+            margin-top: 2rem;
+            font-size: 1.3rem;
+            border-top: 1px dashed #c7a36b;
+            padding-top: 1rem;
+            font-family: 'Segoe Script', 'Georgia', cursive;
+            color: #72522e;
+        }
+
+        /* Эффект вращения валов + адаптив */
+        @media (max-width: 700px) {
+            .scroll-text {
+                padding: 1.2rem 1.2rem 1.8rem 1.2rem;
+            }
+            .scroll-roller {
+                height: 26px;
+                margin: 0 10px;
+            }
+            .scroll-roller::before,
+            .scroll-roller::after {
+                width: 14px;
+                height: 38px;
+                top: -6px;
+            }
+            .parchment {
+                border-left: 10px solid #e9debc;
+                border-right: 10px solid #e9debc;
+            }
+        }
+
+        /* для очень узких экранов */
+        @media (max-width: 480px) {
+            .scroll-wrapper {
+                padding: 8px 3vw;
+            }
+            .scroll-text {
+                padding: 1rem 0.9rem;
+                line-height: 1.5;
+            }
+            .drop-cap {
+                margin-right: 0.5rem;
+                padding-right: 8px;
+            }
+        }
+
+        /* анимация активного скролла — для ритмичного вращения */
+        .scrolling-active {
+            transition: all 0.02s;
+        }
+
+        /* подпись под свитком (необязательно, но стильно) */
+        .scroll-note {
+            text-align: center;
+            margin-top: 6px;
+            font-size: 0.7rem;
+            color: #b8a06e;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.7;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+<div class="scroll-wrapper">
+    <div class="scroll-container">
+        <!-- Верхний вал -->
+        <div class="scroll-roller" id="topRoller"></div>
+
+        <!-- Пергамент с текстом -->
+        <div class="parchment" id="parchmentCore">
+            <div class="scroll-text" id="scrollTextArea">
+				<div style="text-align: center; margin: 1.5rem 0;">
+                    <span style="background: #ebddb050; padding: 0.3rem 1.2rem; border-radius: 60px; font-size: 2rem;">
+					☙  Исследовательская работа на соискание звания Эксперта школы Восстановления  ❧
+					</span>
+                </div>
+				<p><strong>КОЛЛЕГИЯ ВИНТЕРХОЛДА</strong></p>
+
+				<p><u>Теоретическая работа на тему</u></p>
+
+				<p>"Улучшение заклинания "Руна Яда" через его изменение и внесение дополнительных эффектов"</p>
+
+				<hr>
+
+				<p><strong>ВВЕДЕНИЕ</strong></p>
+
+				<p>Актуальность исследования обусловлена ограниченностью наступательного
+				арсенала заклинаний школы Восстановления. На данный момент "Руна Яда" является единственным 
+				заклинанием этой школы, способным наносить прямой урон живым существам на расстоянии от мага, 
+				однако она оказывается практически бесполезной против нежити, обладающей иммунитетом к ядам.</p>
+
+				<br>
+
+				<p><u>Цель работы:</u> теоретическая разработка модифицированной версии заклинания "Руна Яда", 
+				которая сохраняла бы эффективность против живых целей и приобретала бы значимый отрицательный 
+				эффект против нежити.</p>
+
+				<br>
+
+				<p><u>Задачи:</u>
+				<ol style="padding-left: 40px;">
+					<li>Проанализировать магическую структуру и рунический состав базового заклинания "Руна Яда".
+					<li>Обосновать внедрение дополнительного эффекта "Освящение".
+					<li>Описать процесс изменения символьной сети руны для достижения синергии эффектов.
+				</ol>
+
+				<br>
+
+				<p><u>Объект работы:</u> заклинание "Руна Яда" школы Восстановления уровня Адепт.</p>
+				<br>
+				<p><u>Предмет работы:</u>Предмет работы: механизмы изменения магических свойств рунических ловушек через 
+				трансформацию их структуры.</p>
+
+				<br>
+
+				<p><u>Проблема:</u> необходимость создания универсального магического инструмента, 
+				способного эффективно воздействовать на разнородные типы противников (живых и нежить) 
+				в рамках одного плетения.</p>
+
+				<hr>
+				
+                <span class="drop-cap">Р</span>
+                <p><strong>уна Яда</strong> - это заклинание уровня адепта, представляющее собой стационарную 
+				магическую ловушку. При активации она взрывается. При успешном срабатывании 
+				с помощью противника или самостоятельной активации магом цель получает урон и отравляется.
+				Центральным элементом этого заклинания является рунический даэдрический символ Iya. 
+				Основным недостатком является то, что такие противники, как нежить, включая вампиров, 
+				частично игнорируют её воздействие. То-есть, заклинание не работает против данных
+				противников в полную силу, так как нежить невосприимчива к отравлениям.</p>
+
+				<br>
+
+				<p>Школа Восстановления базируется на управлении жизненной энергией через магический свет. 
+				Энергия жизни естественным образом противоположна "энергии нежизни", питающей нежить. 
+				Дополнительный эффект для Руны Яда должен строиться на принципах таких заклинаний, как "Огонь солнца" 
+				или "Аура Стендарра", которые способны наложить Освящение на мертвецов.</p>
+
+				<br>
+
+                <p>Внедрение механизма "Освящения" в структуру руны позволит создать резонанс, который при активации 
+				будет не только поражать физическую оболочку живых существ токсинами, но и разрушать тёмную 
+				магическую связь между душой и телом нежити с помощью концентрированного потока жизненной энергии.</p>
+
+				<hr>
+
+                <p><strong>ИЗМЕНЕНИЕ РУНИЧЕСКОГО СОСТАВА ДЛЯ ПОЛУЧЕНИЯ НЕОБХОДИМОГО ЭФФЕКТА</strong></p>
+
+				<span class="drop-cap">Д</span>
+				<p><strong>ля </strong>внесения изменений необходимо усложнить структуру плетения заклинаний, что потребует большего 
+				времени на подготовку заклинания.</p>
+
+				<br>
+
+				<p><strong>Центральный узел:</strong> К существующему символу Iya, отвечающему за яд, предположительно 
+				необходимо добавить дополнительный элемент в центральную часть руны. Исходя из анализа других рун, 
+				символ Lyr используютется для фокусировки атакующей энергии (в руне огня). 
+				Однако для получения эффекта "Освящения" целесообразно также внести дополнения в вербальную формулу Руны Яда, 
+				например взяв часть формулы из заклинания "Ауры Стендарра". Таким образом через рунический символ Lyr можно попытаться
+				закрепить "светлую" энергетику, обжигающую подобно огню, для нежити.</p>
+
+				<br>
+
+				<p><strong>Внешний контур:</strong> Стандартный круг руны содержит символы Meht, Quam, Tayem, Hekem и другие. 
+				Для стабилизации нового эффекта рекомендуется усилить контур символом Seht, который в морозных рунах отвечает за 
+				замедление и кристаллизацию структуры, что поможет удерживать эффект "Освящения" на цели.</p>
+
+				<br>
+
+				<p><strong>Механика срабатывания:</strong> Плетение должно быть настроено так, чтобы при контакте с живой аурой 
+				активировался выброс ядовитых токсинов, а при контакте с неживой — происходил резонанс жизненной энергии, 
+				накладывающий эффект "Освящения".</p>
+
+				<hr>
+
+				<p><strong>Заключение</strong></p>
+
+				<span class="drop-cap">М</span>
+                <p><strong>одификация </strong>заклинания "Руны Яда" путем интеграции эффекта "Освящение" превращает узкоспециализированную ловушку 
+				в универсальное средство защиты мага-целителя. Анализ показывает, что путем обогащения центрального рунического символа Iya символом Lyr 
+				и добавления стабилизирующих элементов внешнего круга есть вероятность добиться двойного действия заклинания. 
+				Это решает проблему не сильной эффективности школы Восстановления против нежити на ранних этапах боя (заклинания, изгоняющие 
+				нежить, не наносят урон мертвецам, а лишь выводят их из боя на некоторое время), позволяя магу Коллегии надежно 
+				контролировать поле боя на дистанции.</p>
+
+				<br>
+
+				<p>Таким образом, предложенный алгоритм изменения "Руны Яда" во истину преобразует данное заклинание и будет действовать как
+				универсальный яд - для живых существ и для неживых. Если же изменение "Руны Яда" на практике не увенчается успехом, можно 
+				попытаться вывести формулу сплетения отдельной руны - "Руны Освящения", применимую конкретно на нежить.</p>
+
+                <hr>
+
+                <div class="signature">
+                    ~ Адепт школы Восстановления, Терентий ~<br>
+                </div>
+                <div style="height: 0.5rem;"></div>
+            </div>
+        </div>
+
+        <!-- Нижний вал -->
+        <div class="scroll-roller" id="bottomRoller"></div>
+    </div>
+    <div class="scroll-note">✧ Исследовательская работа на соискание звания Эксперта школы Восстановления  ✧</div>
+</div>
+
+<script>
+    (function() {
+        // Элементы: пергамент, текстовая область, валы
+        const parchment = document.getElementById('parchmentCore');
+        const textContainer = document.getElementById('scrollTextArea');
+        const topRoller = document.getElementById('topRoller');
+        const bottomRoller = document.getElementById('bottomRoller');
+
+        if (!textContainer || !parchment) return;
+
+        let lastScrollTop = textContainer.scrollTop;
+        let ticking = false;
+        let speedFactor = 0;
+        let resetSpeedTimer;
+
+        // Функция для создания эффекта "проворачивания свитка"
+        function applyScrollEffect(scrollTop, deltaY = 0) {
+            const maxScroll = textContainer.scrollHeight - textContainer.clientHeight;
+            let progress = maxScroll > 0 ? scrollTop / maxScroll : 0;
+            progress = Math.min(1, Math.max(0, progress));
+
+            // Динамическая скорость (для дополнительного вращения по инерции)
+            let dynamicSpeed = Math.min(Math.abs(deltaY) / 70, 0.55);
+            if (deltaY === undefined || isNaN(dynamicSpeed)) dynamicSpeed = speedFactor * 0.6;
+            
+            // ОСНОВНОЙ ЭФФЕКТ ВРАЩЕНИЯ: поворот всей "трубы" пергамента
+            // наклон по X (от -2.2 до 2.2 град) для имитации скрутки
+            const rotateBase = (progress - 0.5) * 2.2;
+            // дополнительный наклон от скорости — для проворота при быстром скролле
+            const speedRotate = dynamicSpeed * 2.4 * (deltaY > 0 ? 1 : -1);
+            let finalRotateX = rotateBase + speedRotate;
+            // ограничим, чтобы текст не съезжал слишком сильно
+            finalRotateX = Math.min(3.5, Math.max(-3.5, finalRotateX));
+            
+            // skewY для "скручивания"
+            const skewBase = (progress - 0.5) * 0.6;
+            const speedSkew = dynamicSpeed * 1.2 * (deltaY > 0 ? 0.8 : -0.8);
+            let finalSkew = skewBase + speedSkew;
+            finalSkew = Math.min(2.2, Math.max(-2.2, finalSkew));
+            
+            // Применяем к самому пергаменту (эффект объёма)
+            parchment.style.transform = `perspective(1000px) rotateX(${finalRotateX}deg) skewY(${finalSkew}deg)`;
+            parchment.style.transition = 'transform 0.08s cubic-bezier(0.2, 0.9, 0.4, 1.1)';
+            
+            // СВЕТОТЕНЬ — "проворот" валов влияет на тени
+            const shadowIntensity = 0.2 + dynamicSpeed * 0.4;
+            const borderGlow = dynamicSpeed > 0.05 ? `inset 0 0 18px rgba(100, 58, 22, ${0.13 + dynamicSpeed*0.2})` : '';
+            parchment.style.boxShadow = `0 12px 28px rgba(0, 0, 0, 0.45), inset 0 1px 4px rgba(255, 240, 180, 0.7), ${borderGlow}`;
+            
+            // ВАЛЫ: вращаются как настоящие катушки свитка
+            if (topRoller && bottomRoller) {
+                // угол поворота валов зависит от прогресса и скорости
+                let rollerAngle = progress * 14; // от 0 до 14 градусов
+                let speedAngle = dynamicSpeed * 12 * (deltaY > 0 ? 0.9 : -0.9);
+                let topAngle = rollerAngle + speedAngle;
+                let bottomAngle = -rollerAngle + (deltaY > 0 ? -speedAngle * 0.7 : speedAngle * 0.7);
+                
+                topRoller.style.transform = `rotateX(${topAngle * 0.4}deg) rotateZ(${topAngle * 0.15}deg)`;
+                bottomRoller.style.transform = `rotateX(${bottomAngle * 0.4}deg) rotateZ(${bottomAngle * 0.12}deg)`;
+                topRoller.style.transition = 'transform 0.1s ease-out';
+                bottomRoller.style.transition = 'transform 0.1s ease-out';
+            }
+            
+            // ДОП. ЭФФЕКТ: внутренняя тень текстового блока и динамический градиент (имитация волн)
+            const innerShadowStrength = 0.08 + dynamicSpeed * 0.2;
+            textContainer.style.boxShadow = `inset 0 0 28px rgba(80, 48, 20, ${innerShadowStrength}), inset 0 2px 5px rgba(60,30,8,0.08)`;
+            
+            // Эффект "дымка" или старинный перелив в зависимости от скролла
+            const gradientPos = (progress * 100).toFixed(0);
+            textContainer.style.background = `radial-gradient(ellipse at 35% ${35 + (progress * 40)}%, rgba(205, 172, 105, 0.08) 0%, transparent 65%),
+                                              repeating-linear-gradient(45deg, rgba(190, 145, 80, 0.02) 0px, rgba(190, 145, 80, 0.02) 2px, transparent 2px, transparent 8px)`;
+        }
+        
+        // Обработчик скролла с вычислением дельты и скорости
+        function handleScroll() {
+            const currentScrollTop = textContainer.scrollTop;
+            const delta = currentScrollTop - lastScrollTop;
+            // обновляем скорость
+            let absDelta = Math.abs(delta);
+            speedFactor = Math.min(absDelta / 25, 0.8);
+            
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    applyScrollEffect(currentScrollTop, delta);
+                    ticking = false;
+                });
+                ticking = true;
+            }
+            lastScrollTop = currentScrollTop;
+            
+            // сброс "скоростного" эффекта через инерцию через 160 мс
+            clearTimeout(resetSpeedTimer);
+            resetSpeedTimer = setTimeout(() => {
+                // плавно убираем дополнительный динамический наклон, оставляя прогрессию
+                requestAnimationFrame(() => {
+                    applyScrollEffect(textContainer.scrollTop, 0);
+                    if (topRoller && bottomRoller) {
+                        topRoller.style.transition = 'transform 0.25s cubic-bezier(0.2,0.9,0.3,1)';
+                        bottomRoller.style.transition = 'transform 0.25s cubic-bezier(0.2,0.9,0.3,1)';
+                    }
+                });
+            }, 160);
+        }
+        
+        // Обработчик колесика мыши для более чуткого проворачивания
+        function wheelHandler(e) {
+            const deltaY = e.deltaY;
+            const st = textContainer.scrollTop;
+            // дополнительно мгновенный вызов с усилением
+            requestAnimationFrame(() => {
+                applyScrollEffect(st, deltaY);
+            });
+            // через короткое время возвращаем нейтральную скорость (но сохраняем прогрессию)
+            clearTimeout(resetSpeedTimer);
+            resetSpeedTimer = setTimeout(() => {
+                requestAnimationFrame(() => {
+                    applyScrollEffect(textContainer.scrollTop, 0);
+                });
+            }, 120);
+        }
+        
+        // Инициализация событий с пассивным режимом для производительности на мобильных
+        textContainer.addEventListener('scroll', handleScroll, { passive: true });
+        textContainer.addEventListener('wheel', wheelHandler, { passive: false });
+        
+        // Для мобильных тач-устройств — обработаем окончание касания
+        let touchTimeout;
+        textContainer.addEventListener('touchstart', () => {
+            clearTimeout(touchTimeout);
+        });
+        textContainer.addEventListener('touchend', () => {
+            touchTimeout = setTimeout(() => {
+                applyScrollEffect(textContainer.scrollTop, 0);
+            }, 180);
+        });
+        
+        // Плавная установка начального состояния
+        function initState() {
+            applyScrollEffect(0, 0);
+            lastScrollTop = 0;
+        }
+        
+        initState();
+        
+        // Адаптив под изменение размеров окна (перспектива остаётся корректной)
+        window.addEventListener('resize', () => {
+            applyScrollEffect(textContainer.scrollTop, 0);
+        });
+        
+        // легкий "загрузочный" поворот для атмосферы
+        setTimeout(() => {
+            parchment.style.transition = 'transform 0.3s ease-out';
+            applyScrollEffect(textContainer.scrollTop, 0);
+        }, 30);
+    })();
+</script>
+</body>
+</html>
